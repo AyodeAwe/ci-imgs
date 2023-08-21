@@ -1,6 +1,6 @@
-ARG CUDA_VER=11.5.1
-ARG LINUX_VER=ubuntu20.04
-ARG PYTHON_VER=3.8
+ARG CUDA_VER=11.8.0
+ARG LINUX_VER=ubuntu22.04
+ARG PYTHON_VER=3.10
 FROM rapidsai/mambaforge-cuda:cuda${CUDA_VER}-base-${LINUX_VER}-py${PYTHON_VER}
 
 ARG TARGETPLATFORM
@@ -22,6 +22,7 @@ ENV SCCACHE_BUCKET=rapids-sccache-east
 ENV SCCACHE_REGION=us-east-2
 ENV SCCACHE_IDLE_TIMEOUT=32768
 ENV SCCACHE_S3_USE_SSL=true
+ENV SCCACHE_S3_NO_CREDENTIALS=false
 
 # Install system packages depending on the LINUX_VER
 RUN \
@@ -35,6 +36,7 @@ RUN \
           cuda-cudart-dev-${PKG_CUDA_VER} \
           cuda-cupti-dev-${PKG_CUDA_VER} \
           file \
+          unzip \
           wget \
         # ignore the build-essential package since it installs dependencies like gcc/g++
         # we don't need them since we use conda compilers, so this keeps our images smaller
@@ -54,6 +56,7 @@ RUN \
           cuda-gdb-${PKG_CUDA_VER} \
           cuda-cupti-${PKG_CUDA_VER} \
           file \
+          unzip \
           wget \
           which \
           yum-utils \
@@ -78,7 +81,7 @@ RUN rapids-mamba-retry install -y \
     gh \
     git \
     jq \
-    "sccache>=0.3.2" \
+    "sccache==0.4.2" \
   && conda clean -aipty
 
 # Install codecov binary
@@ -115,6 +118,6 @@ RUN /opt/conda/bin/git config --system --add safe.directory '*'
 RUN pip install "rapids-dependency-file-generator==1.*" \
     && pip cache purge
 
-COPY --from=mikefarah/yq:4.33.3 /usr/bin/yq /usr/local/bin/yq
+COPY --from=mikefarah/yq:4.34.2 /usr/bin/yq /usr/local/bin/yq
 
 CMD ["/bin/bash"]
